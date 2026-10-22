@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SAGDB Social Media Performance</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F6F8F7; --panel: #FFFFFF; --fg: #14231C; --muted: #66756D; --line: #E2E8E4;
+    --fb: #1F6F54; --ig: #E0A33A; --up: #1E8A4C; --down: #C2412D; --band: #1F6F54; --band-fg: #FFFFFF;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0F1613; --panel: #17201C; --fg: #E8EEEA; --muted: #9AA8A0; --line: #2A3530;
+      --fb: #3FA37E; --ig: #E8B04E; --up: #4CC37F; --down: #F07560; --band: #153F31; --band-fg: #E8EEEA; }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--fg); font-family: Inter, system-ui, -apple-system, Segoe UI, Arial, sans-serif; font-size: 15px; }
+  .band { background: var(--band); color: var(--band-fg); padding: 28px 16px 24px; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 16px; }
+  .band .wrap { padding: 0; }
+  .eyebrow { text-transform: uppercase; letter-spacing: .12em; font-size: 11px; opacity: .8; }
+  h1 { font-size: clamp(24px, 4vw, 34px); font-weight: 600; letter-spacing: -.02em; margin: 6px 0 4px; }
+  .period { opacity: .9; }
+  .filters { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; margin-top: 18px; font-size: 13px; }
+  .filters label { display: inline-flex; gap: 6px; align-items: center; }
+  .filters select, .filters button { font: inherit; border-radius: 8px; padding: 6px 10px; border: 1px solid rgba(255,255,255,.35); background: rgba(255,255,255,.12); color: var(--band-fg); cursor: pointer; }
+  .filters select option { color: #14231C; }
+  .filters button[aria-pressed=true] { background: var(--band-fg); color: var(--band); }
+  main { display: flex; flex-direction: column; gap: 28px; padding-top: 24px; padding-bottom: 40px; }
+  h2 { font-size: 19px; font-weight: 600; margin: 0 0 10px; }
+  h3 { font-size: 15px; font-weight: 600; margin: 0; }
+  .sub { color: var(--muted); font-size: 12.5px; margin: 3px 0 12px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; min-width: 0; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr)); gap: 12px; }
+  .tile { border-top: 3px solid var(--ig); }
+  .tile .lab { color: var(--muted); font-size: 12.5px; }
+  .tile .num { font-size: 28px; font-weight: 600; letter-spacing: -.02em; margin: 4px 0; font-variant-numeric: tabular-nums; }
+  .tile .note { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+  .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr)); gap: 12px; }
+  ul.find { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 8px; line-height: 1.5; }
+  .legend { display: flex; gap: 16px; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+  .chart { position: relative; min-height: 240px; }
+  .chart svg { display: block; }
+  .chart text { fill: var(--muted); font-size: 11px; font-family: inherit; }
+  .tip { position: absolute; pointer-events: none; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 6px 20px rgba(0,0,0,.12); padding: 6px 10px; font-size: 12px; display: none; white-space: nowrap; z-index: 2; }
+  .tip .h { color: var(--muted); margin-bottom: 2px; }
+  .tw { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+  th, td { padding: 7px 8px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+  th { color: var(--muted); font-weight: 500; font-size: 12px; }
+  th:first-child, td:first-child { text-align: left; }
+  td.txt, th.txt { text-align: left; white-space: normal; min-width: 180px; }
+  tr.tot td { font-weight: 600; border-top: 1.5px solid var(--fg); border-bottom: none; }
+  td a { color: inherit; text-decoration: none; border-bottom: 1px dotted var(--muted); }
+  .up { color: var(--up); font-weight: 600; } .down { color: var(--down); font-weight: 600; } .mu { color: var(--muted); }
+  .empty { color: var(--muted); font-size: 13px; padding: 8px 0; }
+  footer { color: var(--muted); font-size: 12px; padding-bottom: 28px; }
+</style>
+</head>
+<body>
+<div class="band">
+  <div class="wrap">
+    <div class="eyebrow">South African Golf Development Board</div>
+    <h1>Social Media Performance</h1>
+    <div class="period"><span id="period">—</span> · Facebook &amp; Instagram</div>
+    <div class="filters">
+      <label>From <select id="from" aria-label="From month"></select></label>
+      <label>To <select id="to" aria-label="To month"></select></label>
+      <button type="button" data-q="all">All months</button>
+      <button type="button" data-q="last">Latest month</button>
+      <button type="button" data-q="quarter">Latest quarter</button>
+    </div>
+  </div>
+</div>
+
+<main class="wrap">
+  <section>
+    <h2>Selected period</h2>
+    <div class="tiles" id="tiles"></div>
+  </section>
+
+  <section class="card">
+    <h2>Key findings</h2>
+    <ul class="find" id="findings"></ul>
+  </section>
+
+  <section>
+    <h2>Month on month</h2>
+    <div class="grid2">
+      <div class="card"><h3>Views by month</h3><p class="sub">Organic views per platform</p><div class="legend"></div><div class="chart" id="cViews"></div></div>
+      <div class="card"><h3>Reach by month</h3><p class="sub">Accounts reached per platform</p><div class="legend"></div><div class="chart" id="cReach"></div></div>
+    </div>
+    <div class="card tw" style="margin-top:12px">
+      <h3>Combined monthly table</h3><p class="sub">Facebook + Instagram. MoM = change on the previous month. Engagement rate = engagements / reach.</p>
+      <table id="tMom"></table>
+    </div>
+  </section>
+
+  <section>
+    <h2>Growth by quarter</h2>
+    <div class="card tw"><p class="sub">Combined Facebook + Instagram. Change compares full quarters only; a partial quarter shows no change.</p><table id="tQ"></table></div>
+  </section>
+
+  <section>
+    <h2>By platform</h2>
+    <div class="grid2">
+      <div class="card"><h3>Posts by month</h3><p class="sub">Posts published per platform</p><div class="legend"></div><div class="chart" id="cPosts"></div></div>
+      <div class="card"><h3>Engagements by month</h3><p class="sub">FB reactions, comments, shares · IG likes, comments, shares, saves</p><div class="legend"></div><div class="chart" id="cEng"></div></div>
+      <div class="card tw"><h3>Facebook by month</h3><p class="sub">Organic only. Original = posted by SAGDB; shared = reshared from other pages</p><table id="tFb"></table></div>
+      <div class="card tw"><h3>Instagram by month</h3><p class="sub">@sagdb1999 posts only</p><table id="tIg"></table></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>What content works</h2>
+    <div class="grid2">
+      <div class="card tw"><h3>Original vs reshared content</h3><p class="sub">Average views per post shows where effort pays off</p><table id="tContent"></table></div>
+      <div class="card tw"><h3>Performance by format</h3><p class="sub">Selected period</p><table id="tFormat"></table></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Top 10 posts</h2>
+    <div class="grid2">
+      <div class="card tw"><h3>Facebook</h3><p class="sub">By organic views. Titles link to the post</p><table id="tTopFb"></table></div>
+      <div class="card tw"><h3>Instagram</h3><p class="sub">By views. Titles link to the post</p><table id="tTopIg"></table></div>
+    </div>
+  </section>
+
+  <section class="card tw">
+    <h2>What's left out</h2>
+    <p class="sub">The Instagram export also holds posts from these accounts. They aren't SAGDB-owned, so they're excluded from every figure above. This table covers the whole year and doesn't follow the month filter. Follower totals aren't in Meta's post exports, so growth is measured by views, reach and engagement.</p>
+    <table id="tEx"></table>
+  </section>
+
+  <footer>Facebook: South African Golf Development Board (SAGDB) page, organic views and reach. Instagram: @sagdb1999 only. Lifetime metrics per post, grouped by publish month. Source: <span id="src"></span>, last updated <span id="upd"></span>.</footer>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script src="data.js"></script>
+<script>
+(function () {
+  const D = window.SAGDB_DATA;
+  const css = k => getComputedStyle(document.documentElement).getPropertyValue(k).trim();
+  const fmtN = v => v == null || isNaN(v) ? '–' : Math.round(v).toLocaleString('en-ZA').replace(/,/g, ' ');
+  const pct = (v, d = 0) => v == null || !isFinite(v) ? '–' : (v * 100).toFixed(d) + '%';
+  const chg = v => v == null || !isFinite(v) ? '<span class="mu">–</span>' : `<span class="${v >= 0 ? 'up' : 'down'}">${v > 0 ? '+' : ''}${(v * 100).toFixed(0)}%</span>`;
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const longM = s => new Date(s + 'T00:00:00Z').toLocaleString('en', { month: 'long', timeZone: 'UTC' });
+  const shortMY = s => new Date(s + 'T00:00:00Z').toLocaleString('en', { month: 'short', year: 'numeric', timeZone: 'UTC' });
+
+  const monthly = D.monthly.map(r => ({ ...r, month_start: String(r.month_start).slice(0, 10),
+    posts: r.fb_posts + r.ig_posts, views: r.fb_views + r.ig_views, reach: r.fb_reach + r.ig_reach, eng: r.fb_engagement + r.ig_engagement }))
+    .sort((a, b) => a.month_start < b.month_start ? -1 : 1);
+  monthly.forEach((r, i) => { const p = monthly[i - 1]; const c = k => p && p[k] ? (r[k] - p[k]) / p[k] : null;
+    r.views_mom = c('views'); r.reach_mom = c('reach'); r.eng_mom = c('eng'); r.rate = r.reach ? r.eng / r.reach : null; });
+  const MS = monthly.map(r => r.month_start);
+
+  // ---- state & filter ----
+  const params = new URLSearchParams(location.hash.slice(1));
+  let F = MS.includes(params.get('from')) ? params.get('from') : MS[0];
+  let T = MS.includes(params.get('to')) ? params.get('to') : MS[MS.length - 1];
+  const selF = document.getElementById('from'), selT = document.getElementById('to');
+  [selF, selT].forEach(s => MS.forEach(m => s.add(new Option(shortMY(m), m))));
+  const qStart = () => { const last = MS[MS.length - 1]; const q0 = Math.floor((+last.slice(5, 7) - 1) / 3) * 3 + 1;
+    return MS.find(m => m >= last.slice(0, 5) + String(q0).padStart(2, '0') + '-01') || last; };
+  function setRange(f, t) { if (f > t) [f, t] = [t, f]; F = f; T = t;
+    history.replaceState(null, '', (F === MS[0] && T === MS[MS.length - 1]) ? location.pathname : '#from=' + F + '&to=' + T); render(); }
+  selF.addEventListener('change', () => setRange(selF.value, T));
+  selT.addEventListener('change', () => setRange(F, selT.value));
+  document.querySelectorAll('[data-q]').forEach(b => b.addEventListener('click', () => {
+    const last = MS[MS.length - 1];
+    if (b.dataset.q === 'all') setRange(MS[0], last); else if (b.dataset.q === 'last') setRange(last, last); else setRange(qStart(), last); }));
+
+  document.querySelectorAll('.legend').forEach(l => l.innerHTML = `<span><i style="background:var(--fb)"></i>Facebook</span><span><i style="background:var(--ig)"></i>Instagram</span>`);
+  document.getElementById('src').textContent = D.source;
+  document.getElementById('upd').textContent = new Date(D.updated + 'T00:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+
+  function table(id, head, rows, opts = {}) {
+    const th = head.map((h, i) => `<th class="${opts.txt === i ? 'txt' : ''}">${h}</th>`).join('');
+    let body = rows.map(r => '<tr>' + r.map((c, i) => `<td class="${opts.txt === i ? 'txt' : ''}">${c}</td>`).join('') + '</tr>').join('');
+    if (opts.total) body += '<tr class="tot">' + opts.total.map((c, i) => `<td>${c}</td>`).join('') + '</tr>';
+    const el = document.getElementById(id);
+    el.innerHTML = `<thead><tr>${th}</tr></thead><tbody>${body}</tbody>`;
+    el.parentElement.querySelectorAll('.empty').forEach(e => e.remove());
+    if (!rows.length && opts.empty) el.insertAdjacentHTML('afterend', `<p class="empty">${opts.empty}</p>`);
+  }
+
+  function bars(id, rows, k1, k2) {
+    const box = document.getElementById(id); box.innerHTML = '';
+    const tt = document.createElement('div'); tt.className = 'tip'; box.appendChild(tt);
+    const W = Math.max(box.clientWidth, 280), H = 240, max = d3.max(rows, r => Math.max(r[k1], r[k2])) || 1;
+    const svg = d3.select(box).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
+    const y = d3.scaleLinear([0, max], [H - 24, 12]).nice(); const ticks = y.ticks(4);
+    let ml = 0; ticks.forEach(t => { const p = svg.append('text').text(fmtN(t)); ml = Math.max(ml, p.node().getComputedTextLength()); p.remove(); }); ml = Math.ceil(ml) + 14;
+    const x = d3.scaleBand(rows.map(r => r.month_start), [ml, W - 4]).paddingInner(.25).paddingOuter(.1);
+    const xi = d3.scaleBand(['a', 'b'], [0, x.bandwidth()]).padding(.08); const bw = Math.min(xi.bandwidth(), 30);
+    svg.append('g').selectAll('line').data(ticks).join('line').attr('x1', ml).attr('x2', W - 4).attr('y1', y).attr('y2', y).attr('stroke', css('--line'));
+    svg.append('g').selectAll('text').data(ticks).join('text').attr('x', ml - 6).attr('y', v => y(v) + 4).attr('text-anchor', 'end').text(fmtN);
+    svg.append('g').selectAll('text').data(rows).join('text').attr('x', r => x(r.month_start) + x.bandwidth() / 2).attr('y', H - 6).attr('text-anchor', 'middle').text(r => r.month);
+    const g = svg.append('g').selectAll('g').data(rows).join('g').attr('transform', r => `translate(${x(r.month_start)},0)`);
+    [[k1, 'a', '--fb'], [k2, 'b', '--ig']].forEach(([k, s, c]) => g.append('rect').attr('x', xi(s) + (xi.bandwidth() - bw) / 2).attr('width', bw)
+      .attr('y', r => y(r[k])).attr('height', r => Math.max(0, y(0) - y(r[k]))).attr('rx', 3).attr('fill', css(c)));
+    g.append('rect').attr('width', x.bandwidth()).attr('height', H).attr('fill', 'transparent')
+      .on('mousemove', (ev, r) => { tt.style.display = 'block';
+        tt.innerHTML = `<div class="h">${longM(r.month_start)} ${r.month_start.slice(0, 4)}</div>` +
+          `<div><i style="display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px;background:var(--fb)"></i>Facebook: ${fmtN(r[k1])}</div>` +
+          `<div><i style="display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px;background:var(--ig)"></i>Instagram: ${fmtN(r[k2])}</div>`;
+        const [px, py] = d3.pointer(ev, box); tt.style.left = Math.min(px + 12, W - 160) + 'px'; tt.style.top = Math.max(py - 56, 0) + 'px'; })
+      .on('mouseleave', () => tt.style.display = 'none');
+  }
+
+  function render() {
+    selF.value = F; selT.value = T;
+    const last = MS[MS.length - 1];
+    document.querySelectorAll('[data-q]').forEach(b => b.setAttribute('aria-pressed', String(
+      b.dataset.q === 'all' ? F === MS[0] && T === last : b.dataset.q === 'last' ? F === last && T === last : F === qStart() && T === last)));
+    const inR = m => { m = String(m).slice(0, 10); return m >= F && m <= T; };
+    const M = monthly.filter(r => inR(r.month_start));
+    const P = D.posts.filter(p => inR(p.month_start));
+    const s = k => M.reduce((a, r) => a + r[k], 0);
+    document.getElementById('period').textContent = (F === T ? '' : longM(F) + ' - ') + longM(T) + ' ' + T.slice(0, 4);
+
+    // tiles
+    const tot = { views: s('views'), reach: s('reach'), eng: s('eng'), posts: s('posts') };
+    const tile = (l, v, n) => `<div class="card tile"><div class="lab">${l}</div><div class="num">${v}</div><div class="note">${n}</div></div>`;
+    document.getElementById('tiles').innerHTML =
+      tile('Total views', fmtN(tot.views), `FB ${fmtN(s('fb_views'))} · IG ${fmtN(s('ig_views'))}`) +
+      tile('Total reach', fmtN(tot.reach), `FB ${fmtN(s('fb_reach'))} · IG ${fmtN(s('ig_reach'))}`) +
+      tile('Engagements', fmtN(tot.eng), `${pct(tot.reach ? tot.eng / tot.reach : null, 1)} of reach engaged`) +
+      tile('Posts published', fmtN(tot.posts), `FB ${fmtN(s('fb_posts'))} · IG ${fmtN(s('ig_posts'))}`) +
+      tile('IG follows from posts', fmtN(s('ig_follows')), 'New follows credited to posts');
+
+    // groups
+    const group = (key, keys) => keys.map(k => { const g = P.filter(p => p[key] === k); const v = g.reduce((a, p) => a + p.views, 0);
+      return { key: k, posts: g.length, views: v, reach: g.reduce((a, p) => a + p.reach, 0), eng: g.reduce((a, p) => a + p.engagement, 0), avg: g.length ? v / g.length : null }; });
+    const content = group('content', [...new Set(D.posts.map(p => p.content))].sort());
+    const formats = group('format', [...new Set(D.posts.map(p => p.format))].sort());
+    const C = k => content.find(r => r.key === k) || {}; const Fm = k => formats.find(r => r.key === k) || {};
+
+    // findings
+    const pk = M.reduce((a, r) => r.views > a.views ? r : a, M[0]); const lastM = M[M.length - 1];
+    const prev = monthly[monthly.indexOf(lastM) - 1];
+    const fs = C('Facebook: Shared from other pages'), fo = C('Facebook: Original posts'), is = C('Instagram: SAGDB-specific posts'), ig = C('Instagram: GolfRSA tournament content');
+    const items = [];
+    if (M.length > 1) items.push(`<b>Standout month:</b> ${longM(pk.month_start)} delivered ${fmtN(pk.views)} views, ${pct(pk.views / tot.views)} of the period's total.`);
+    items.push(`<b>Monthly average:</b> ${fmtN(tot.views / M.length)} combined views a month across the period.`);
+    items.push(`<b>Latest month:</b> ${longM(lastM.month_start)} brought ${fmtN(lastM.views)} views from ${fmtN(lastM.posts)} posts` + (prev ? `, ${chg(lastM.views_mom)} on ${longM(prev.month_start)}.` : '.'));
+    if (fo.posts || fs.posts) items.push(`<b>Original vs reshared on Facebook:</b> ${fmtN(fs.posts)} shared posts averaged ${fmtN(fs.avg)} views each; ${fmtN(fo.posts)} original SAGDB posts averaged ${fmtN(fo.avg)}.`);
+    if (is.posts || ig.posts) items.push(`<b>SAGDB's own story on Instagram:</b> ${fmtN(is.posts)} posts naming SAGDB averaged ${fmtN(is.avg)} views, versus ${fmtN(ig.avg)} for GolfRSA tournament content.`);
+    const ca = Fm('Instagram Carousel'), re = Fm('Instagram Reel'), im = Fm('Instagram Image');
+    if (ca.posts || re.posts || im.posts) items.push(`<b>Instagram formats:</b> carousels averaged ${fmtN(ca.avg)} views, reels ${fmtN(re.avg)} and single images ${fmtN(im.avg)}.`);
+    document.getElementById('findings').innerHTML = items.map(i => `<li>${i}</li>`).join('');
+
+    // charts
+    bars('cViews', M, 'fb_views', 'ig_views'); bars('cReach', M, 'fb_reach', 'ig_reach');
+    bars('cPosts', M, 'fb_posts', 'ig_posts'); bars('cEng', M, 'fb_engagement', 'ig_engagement');
+
+    // tables
+    table('tMom', ['Month', 'Posts', 'Views', 'Views MoM', 'Reach', 'Reach MoM', 'Engagements', 'Eng. MoM', 'Eng. rate'],
+      M.map(r => [longM(r.month_start), fmtN(r.posts), fmtN(r.views), chg(r.views_mom), fmtN(r.reach), chg(r.reach_mom), fmtN(r.eng), chg(r.eng_mom), pct(r.rate, 1)]),
+      { total: ['Total', fmtN(tot.posts), fmtN(tot.views), '', fmtN(tot.reach), '', fmtN(tot.eng), '', pct(tot.reach ? tot.eng / tot.reach : null, 1)] });
+
+    const qs = new Map();
+    M.forEach(r => { const q = Math.ceil(+r.month_start.slice(5, 7) / 3); const k = r.month_start.slice(0, 4) + 'Q' + q;
+      if (!qs.has(k)) qs.set(k, { q, months: [], posts: 0, views: 0, reach: 0, eng: 0 });
+      const o = qs.get(k); o.months.push(r.month); ['posts', 'views', 'reach', 'eng'].forEach(f => o[f] += r[f]); });
+    const qa = [...qs.values()];
+    table('tQ', ['Quarter', 'Posts', 'Views', 'Views change', 'Reach', 'Reach change', 'Engagements', 'Eng. change'], qa.map((o, i) => {
+      const p = qa[i - 1], full = o.months.length === 3; const c = f => full && p && p.months.length === 3 && p[f] ? (o[f] - p[f]) / p[f] : null;
+      const span = o.months.length > 1 ? o.months[0] + '-' + o.months[o.months.length - 1] : o.months[0];
+      return [`Q${o.q} (${span}${full ? '' : ', partial'})`, fmtN(o.posts), fmtN(o.views), chg(c('views')), fmtN(o.reach), chg(c('reach')), fmtN(o.eng), chg(c('eng'))]; }));
+
+    table('tFb', ['Month', 'Posts', 'Views', 'Reach', 'Eng.', 'Original', 'Shared'],
+      M.map(r => [longM(r.month_start), fmtN(r.fb_posts), fmtN(r.fb_views), fmtN(r.fb_reach), fmtN(r.fb_engagement), fmtN(r.fb_original_posts), fmtN(r.fb_shared_posts)]),
+      { total: ['Total', fmtN(s('fb_posts')), fmtN(s('fb_views')), fmtN(s('fb_reach')), fmtN(s('fb_engagement')), fmtN(s('fb_original_posts')), fmtN(s('fb_shared_posts'))] });
+    table('tIg', ['Month', 'Posts', 'Views', 'Reach', 'Eng.', 'Follows'],
+      M.map(r => [longM(r.month_start), fmtN(r.ig_posts), fmtN(r.ig_views), fmtN(r.ig_reach), fmtN(r.ig_engagement), fmtN(r.ig_follows)]),
+      { total: ['Total', fmtN(s('ig_posts')), fmtN(s('ig_views')), fmtN(s('ig_reach')), fmtN(s('ig_engagement')), fmtN(s('ig_follows'))] });
+
+    table('tContent', ['Content', 'Posts', 'Views', 'Reach', 'Avg views'], content.map(r => [esc(r.key.replace(': ', ' · ')), fmtN(r.posts), fmtN(r.views), fmtN(r.reach), fmtN(r.avg)]), { txt: 0 });
+    table('tFormat', ['Format', 'Posts', 'Views', 'Reach', 'Eng.', 'Avg views'], formats.map(r => [esc(r.key), fmtN(r.posts), fmtN(r.views), fmtN(r.reach), fmtN(r.eng), fmtN(r.avg)]), { txt: 0 });
+
+    const top = pl => P.filter(p => p.platform === pl).sort((a, b) => b.views - a.views).slice(0, 10).map((p, i) =>
+      [i + 1, `<a href="${esc(p.link)}" target="_blank" rel="noopener">${esc(p.post)}</a>`,
+       new Date(p.published + 'T00:00:00Z').toLocaleDateString('en-GB', { day: '2-digit', month: 'short', timeZone: 'UTC' }),
+       esc(p.format.replace(pl + ' ', '')), fmtN(p.views), fmtN(p.reach), fmtN(p.engagement)]);
+    const th = ['#', 'Post', 'Date', 'Format', 'Views', 'Reach', 'Eng.'];
+    table('tTopFb', th, top('Facebook'), { txt: 1, empty: 'No Facebook posts in this period.' });
+    table('tTopIg', th, top('Instagram'), { txt: 1, empty: 'No Instagram posts in this period.' });
+    table('tEx', ['Account', 'Posts', 'Views', 'Reach'], D.excluded.map(r => [esc(r.group), fmtN(r.posts), fmtN(r.views), fmtN(r.reach)]), { txt: 0 });
+  }
+
+  render();
+  let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(render, 150); });
+})();
+</script>
+</body>
+</html>
